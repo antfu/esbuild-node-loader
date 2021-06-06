@@ -16,6 +16,12 @@ npm i esbuild-node-loader -D
 node --experimental-loader esbuild-node-loader file.ts
 ```
 
+Or use with [esmo](https://github.com/antfu/esno):
+
+```ts
+esmo file.ts
+```
+
 ## Sponsors
 
 <p align="center">
