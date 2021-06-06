@@ -3,13 +3,11 @@ name: Test
 on:
   push:
     branches:
-      - main
       - master
 
   pull_request:
     branches:
       - main
-      - master
 
 jobs:
   build:
@@ -34,9 +32,6 @@ jobs:
 
       - name: Install
         run: nci
-
-      - name: Lint
-        run: nr lint --if-present
 
       - name: Test
         run: nr test --if-present
