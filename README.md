@@ -2,7 +2,7 @@
 
 [![NPM version](https://img.shields.io/npm/v/esbuild-node-loader?color=a1b858&label=)](https://www.npmjs.com/package/esbuild-node-loader)
 
-Transpile TypeScript to ESM with Node.js loader. 
+Transpile TypeScript to ESM with [Node.js loader hooks](https://nodejs.org/api/esm.html#esm_transpiler_loader).
 
 Inspired by [`esbuild-register`](https://github.com/egoist/esbuild-register) but for Node.js ESM instead of CJS.
 
