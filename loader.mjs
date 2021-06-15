@@ -1,5 +1,6 @@
 import { URL, pathToFileURL, fileURLToPath } from 'url'
 import { transformSync } from 'esbuild'
+import fs from 'fs'
 
 const baseURL = pathToFileURL(`${process.cwd()}/`).href
 
@@ -12,6 +13,13 @@ export function resolve(specifier, context, defaultResolve) {
     return {
       url: new URL(specifier, parentURL).href,
     }
+  }
+
+  // try resolve `.ts` extension
+  let url = new URL(specifier + '.ts', parentURL).href 
+  const path = fileURLToPath(url)
+  if (fs.existsSync(path)) {
+    return {url}
   }
 
   // Let Node.js handle all other specifiers.
