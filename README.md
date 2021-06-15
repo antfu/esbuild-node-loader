@@ -4,7 +4,7 @@
 
 Transpile TypeScript to ESM with [Node.js loader hooks](https://nodejs.org/api/esm.html#esm_transpiler_loader).
 
-Inspired by [`esbuild-register`](https://github.com/egoist/esbuild-register) but for Node.js ESM instead of CJS.
+Inspired by [`esbuild-register`](https://github.com/egoist/esbuild-register) but for **Node.js ESM** instead of CJS.
 
 ## Usage
 
@@ -18,7 +18,7 @@ node --experimental-loader esbuild-node-loader file.ts
 
 Or use with [esmo](https://github.com/antfu/esno):
 
-```ts
+```bash
 esmo file.ts
 ```
 

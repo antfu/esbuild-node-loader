@@ -3,6 +3,7 @@ import { transformSync } from 'esbuild'
 import fs from 'fs'
 
 const baseURL = pathToFileURL(`${process.cwd()}/`).href
+const isWindows = process.platform === "win32"
 
 const extensionsRegex = /\.ts$/
 
@@ -10,16 +11,15 @@ export function resolve(specifier, context, defaultResolve) {
   const { parentURL = baseURL } = context
 
   if (extensionsRegex.test(specifier)) {
-    return {
-      url: new URL(specifier, parentURL).href,
-    }
+    const url = new URL(specifier, parentURL).href
+    return { url }
   }
 
   // try resolve `.ts` extension
   let url = new URL(specifier + '.ts', parentURL).href 
   const path = fileURLToPath(url)
   if (fs.existsSync(path)) {
-    return {url}
+    return { url }
   }
 
   // Let Node.js handle all other specifiers.
@@ -41,7 +41,10 @@ export function transformSource(source, context, defaultTransformSource) {
   const { url, format } = context
 
   if (extensionsRegex.test(url)) {
-    const filename = fileURLToPath(url)
+    let filename = fileURLToPath(url)
+    if (isWindows)
+      filename = filename.slice(1)
+
     const { code: js, warnings, map: jsSourceMap } = transformSync(source.toString(), {
       sourcefile: filename,
       sourcemap: 'both',
