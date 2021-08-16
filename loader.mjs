@@ -6,7 +6,7 @@ const baseURL = pathToFileURL(`${process.cwd()}/`).href
 const isWindows = process.platform === "win32"
 
 const extensionsRegex = /\.ts$/
-const dataUrlRegex = /^data:/
+const excludeRegex = /^\w+:/
 
 export function resolve(specifier, context, defaultResolve) {
   const { parentURL = baseURL } = context
@@ -16,9 +16,8 @@ export function resolve(specifier, context, defaultResolve) {
     return { url }
   }
 
-  // Using `new Worker(new URL("data:..."))` resolves a data URL which can't be
-  // passed to fileURLToPath()
-  if (!dataUrlRegex.test(specifier)) {
+  // ignore `data:` and `node:` prefix etc.
+  if (!excludeRegex.test(specifier)) {
     // Try to resolve `.ts` extension
     let url = new URL(specifier + '.ts', parentURL).href
     const path = fileURLToPath(url)
