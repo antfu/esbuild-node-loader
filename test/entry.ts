@@ -5,7 +5,7 @@ import { relative } from 'path'
 
 const cwd = process.cwd()
 function relativize(path: string) {
-  return relative(cwd, path)
+  return `./${relative(cwd, path)}`
 }
 
 test('register', async() => {
