@@ -1,12 +1,18 @@
 import assert from 'assert'
 import { test } from 'uvu'
 import execa from 'execa'
+import { relative } from 'path'
+
+const cwd = process.cwd()
+function relativize(path: string) {
+  return relative(cwd, path)
+}
 
 test('register', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
-    `${process.cwd()}/loader.mjs`,
-    `${process.cwd()}/test/fixture.ts`,
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.ts`),
   ])
   assert(stdout === 'text')
 })
@@ -14,8 +20,8 @@ test('register', async() => {
 test('register2', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
-    `${process.cwd()}/loader.mjs`,
-    `${process.cwd()}/test/fixture.arrowFunction.ts`,
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.arrowFunction.ts`),
   ])
   assert(stdout === 'hello from ts')
 })
@@ -23,8 +29,8 @@ test('register2', async() => {
 test('register3', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
-    `${process.cwd()}/loader.mjs`,
-    `${process.cwd()}/test/fixture.import.ts`,
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.import.ts`),
   ])
   assert(stdout === 'export')
 })
@@ -32,8 +38,8 @@ test('register3', async() => {
 test('register cjs', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
-    `${process.cwd()}/loader.mjs`,
-    `${process.cwd()}/test/fixture.cjs.ts`,
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.cjs.ts`),
   ])
   assert(stdout === 'fs imported')
 })
@@ -41,8 +47,8 @@ test('register cjs', async() => {
 test('package type module', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
-    `${process.cwd()}/loader.mjs`,
-    `${process.cwd()}/test/fixture-type-module/index.js`,
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture-type-module/index.js`),
   ])
   assert(stdout === 'foo')
 })
@@ -50,8 +56,8 @@ test('package type module', async() => {
 test('import type module', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
-    `${process.cwd()}/loader.mjs`,
-    `${process.cwd()}/test/import-mjs/index.js`,
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/import-mjs/index.js`),
   ])
   assert(stdout === 'foo')
 })
