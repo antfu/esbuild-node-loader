@@ -1,8 +1,5 @@
 logs
 dist
 node_modules
-
 !test/*/node_modules
-
-# intellij stuff
 .idea/
