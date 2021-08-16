@@ -46,9 +46,9 @@ export function transformSource(source, context, defaultTransformSource) {
   const { url, format } = context
 
   if (extensionsRegex.test(url)) {
-    let filename = fileURLToPath(url)
-    // if (isWindows)
-    //   filename = filename.slice(1)
+    let filename = url
+    if (!isWindows)
+      filename = fileURLToPath(url)
 
     const { code: js, warnings, map: jsSourceMap } = transformSync(source.toString(), {
       sourcefile: filename,
