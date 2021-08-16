@@ -1,6 +1,6 @@
 {
   "name": "esbuild-node-loader",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Transpile TypeScript to ESM with Node.js loader",
   "main": "./loader.mjs",
   "funding": "https://github.com/sponsors/antfu",
