@@ -1,7 +1,7 @@
 import assert from 'assert'
+import { relative } from 'path'
 import { test } from 'uvu'
 import execa from 'execa'
-import { relative } from 'path'
 
 const cwd = process.cwd()
 function relativize(path: string) {
@@ -58,6 +58,15 @@ test('import type module', async() => {
     '--experimental-loader',
     relativize(`${cwd}/loader.mjs`),
     relativize(`${cwd}/test/import-mjs/index.js`),
+  ])
+  assert(stdout === 'foo')
+})
+
+test('import folder', async() => {
+  const { stdout } = await execa('node', [
+    '--experimental-loader',
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/folders/index.ts`),
   ])
   assert(stdout === 'foo')
 })
