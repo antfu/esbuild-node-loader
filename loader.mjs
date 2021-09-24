@@ -53,7 +53,7 @@ export function transformSource(source, context, defaultTransformSource) {
       sourcefile: filename,
       sourcemap: 'both',
       loader: 'ts',
-      target: 'esnext',
+      target: `node${process.versions.node}`,
       format: format === 'module' ? 'esm' : 'cjs',
     })
 
