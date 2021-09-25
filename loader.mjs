@@ -12,7 +12,7 @@ export function resolve(specifier, context, defaultResolve) {
   const { parentURL = baseURL } = context;
   const url = new URL(specifier, parentURL);
   if (extensionsRegex.test(url.pathname)) {
-    return { url: url.href }
+    return { url: url.href };
   }
 
   // ignore `data:` and `node:` prefix etc.
