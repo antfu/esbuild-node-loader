@@ -80,4 +80,14 @@ test('import with query', async() => {
   assert(stdout === "1\n2");
 })
 
+test('import tsx', async() => {
+  const { stdout } = await execa('node', [
+    '--experimental-loader',
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/feature.tsxStyle.tsx`),
+  ])
+  assert(stdout === 'foo:bar')
+})
+
+
 test.run()
