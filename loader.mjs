@@ -16,7 +16,7 @@ export function resolve(specifier, context, defaultResolve) {
   }
 
   // ignore `data:` and `node:` prefix etc.
-  if (!excludeRegex.test(url.pathname)) {
+  if (!excludeRegex.test(specifier)) {
     // Try to resolve `.ts` extension
     url.pathname = url.pathname + '.ts';
     // let url = new URL(pathname + ".ts", parentURL).href;
