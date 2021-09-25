@@ -35,6 +35,15 @@ test('register3', async() => {
   assert(stdout === 'export')
 })
 
+test('register4', async() => {
+  const { stdout } = await execa('node', [
+    '--experimental-loader',
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.optionalChaining.ts`),
+  ])
+  assert(stdout === 'hello from ts')
+})
+
 test('register cjs', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
