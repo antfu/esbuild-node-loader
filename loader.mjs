@@ -5,7 +5,7 @@ import fs from 'fs'
 const baseURL = pathToFileURL(`${process.cwd()}/`).href
 const isWindows = process.platform === "win32"
 
-const extensionsRegex = /\.ts$/
+const extensionsRegex = /\.(tsx?)$/
 const excludeRegex = /^\w+:/
 
 export function resolve(specifier, context, defaultResolve) {
@@ -17,12 +17,14 @@ export function resolve(specifier, context, defaultResolve) {
 
   // ignore `data:` and `node:` prefix etc.
   if (!excludeRegex.test(url.pathname)) {
-    // Try to resolve `.ts` extension
-    url.pathname = url.pathname + '.ts';
-    // let url = new URL(pathname + ".ts", parentURL).href;
-    const path = fileURLToPath(url.href);
-    if (fs.existsSync(path)) {
-      return { url: url.href };
+    // Try to resolve extension
+    const pathname = url.pathname;
+    for (const ext of ['ts', 'tsx']) {
+      url.pathname = `${pathname}.${ext}`;
+      const path = fileURLToPath(url.href);
+      if (fs.existsSync(path)) {
+        return { url: url.href }
+      }
     }
   }
 
@@ -52,7 +54,7 @@ export function transformSource(source, context, defaultTransformSource) {
     const { code: js, warnings, map: jsSourceMap } = transformSync(source.toString(), {
       sourcefile: filename,
       sourcemap: 'both',
-      loader: 'ts',
+      loader: new URL(url).pathname.endsWith('.tsx') ? 'tsx' : 'ts',
       target: `node${process.versions.node}`,
       format: format === 'module' ? 'esm' : 'cjs',
     })
