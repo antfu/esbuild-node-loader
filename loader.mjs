@@ -16,7 +16,7 @@ export function resolve(specifier, context, defaultResolve) {
   }
 
   // ignore `data:` and `node:` prefix etc.
-  if (!excludeRegex.test(url.pathname)) {
+  if (!excludeRegex.test(specifier)) {
     // Try to resolve extension
     const pathname = url.pathname;
     for (const ext of ['ts', 'tsx']) {
