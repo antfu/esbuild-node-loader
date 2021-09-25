@@ -33,8 +33,8 @@ export function resolve(specifier, context, defaultResolve) {
 export function getFormat(url, context, defaultGetFormat) {
   if (extensionsRegex.test(new URL(url).pathname)) {
     return {
-      format: "module",
-    };
+      format: 'module',
+    }
   }
 
   // Let Node.js handle all other URLs.
