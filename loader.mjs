@@ -9,20 +9,20 @@ const extensionsRegex = /\.ts$/
 const excludeRegex = /^\w+:/
 
 export function resolve(specifier, context, defaultResolve) {
-  const { parentURL = baseURL } = context
-
-  if (extensionsRegex.test(specifier)) {
-    const url = new URL(specifier, parentURL).href
-    return { url }
+  const { parentURL = baseURL } = context;
+  const url = new URL(specifier, parentURL);
+  if (extensionsRegex.test(url.pathname)) {
+    return { url: url.href };
   }
 
   // ignore `data:` and `node:` prefix etc.
-  if (!excludeRegex.test(specifier)) {
+  if (!excludeRegex.test(url.pathname)) {
     // Try to resolve `.ts` extension
-    let url = new URL(specifier + '.ts', parentURL).href
-    const path = fileURLToPath(url)
+    url.pathname = url.pathname + '.ts';
+    // let url = new URL(pathname + ".ts", parentURL).href;
+    const path = fileURLToPath(url.href);
     if (fs.existsSync(path)) {
-      return { url }
+      return { url: url.href };
     }
   }
 
@@ -31,7 +31,7 @@ export function resolve(specifier, context, defaultResolve) {
 }
 
 export function getFormat(url, context, defaultGetFormat) {
-  if (extensionsRegex.test(url)) {
+  if (extensionsRegex.test(new URL(url).pathname)) {
     return {
       format: 'module',
     }
