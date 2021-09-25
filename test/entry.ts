@@ -71,4 +71,13 @@ test('import type module', async() => {
   assert(stdout === 'foo')
 })
 
+test('import with query', async() => {
+  const { stdout } = await execa('node', [
+    '--experimental-loader',
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.importWithQuery.ts`),
+  ])
+  assert(stdout === "1\n2");
+})
+
 test.run()
