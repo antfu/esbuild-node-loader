@@ -5,7 +5,7 @@ import { transformSync } from 'esbuild'
 const baseURL = pathToFileURL(`${process.cwd()}/`).href
 const isWindows = process.platform === 'win32'
 
-const extensionsRegex = /\.(tsx?)$/
+const extensionsRegex = /\.(tsx?|json)$/;
 const excludeRegex = /^\w+:/
 
 export function resolve(specifier, context, defaultResolve) {
@@ -52,7 +52,7 @@ export function transformSource(source, context, defaultTransformSource) {
     const { code: js, warnings, map: jsSourceMap } = transformSync(source.toString(), {
       sourcefile: filename,
       sourcemap: 'both',
-      loader: new URL(url).pathname.endsWith('.tsx') ? 'tsx' : 'ts',
+      loader: new URL(url).pathname.match(extensionsRegex)[1],
       target: `node${process.versions.node}`,
       format: format === 'module' ? 'esm' : 'cjs',
     })
