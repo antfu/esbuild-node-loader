@@ -1,7 +1,7 @@
 import assert from 'assert'
+import { relative } from 'path'
 import { test } from 'uvu'
 import execa from 'execa'
-import { relative } from 'path'
 
 const cwd = process.cwd()
 function relativize(path: string) {
@@ -77,17 +77,25 @@ test('import with query', async() => {
     relativize(`${cwd}/loader.mjs`),
     relativize(`${cwd}/test/fixture.importWithQuery.ts`),
   ])
-  assert(stdout === "1\n2");
+  assert(stdout === '1\n2')
 })
 
 test('import tsx', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
     relativize(`${cwd}/loader.mjs`),
-    relativize(`${cwd}/test/feature.tsxStyle.tsx`),
+    relativize(`${cwd}/test/fixture.tsxStyle.tsx`),
   ])
   assert(stdout === 'foo:bar')
 })
 
+test('import json', async() => {
+  const { stdout } = await execa('node', [
+    '--experimental-loader',
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.json.ts`),
+  ])
+  assert(stdout === 'esbuild-node-loader')
+})
 
 test.run()
