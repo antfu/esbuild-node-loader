@@ -89,6 +89,15 @@ test('import tsx', async() => {
   assert(stdout === 'foo:bar')
 })
 
+test('import tsx2', async() => {
+  const { stdout } = await execa('node', [
+    '--experimental-loader',
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.query2.ts`),
+  ])
+  assert(stdout === 'foo:bar')
+})
+
 test('import json', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
