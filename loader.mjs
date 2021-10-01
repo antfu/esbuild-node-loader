@@ -44,7 +44,7 @@ export function getFormat(url, context, defaultGetFormat) {
 export function transformSource(source, context, defaultTransformSource) {
   const { url, format } = context
 
-  if (extensionsRegex.test(url)) {
+  if (extensionsRegex.test(new URL(url).pathname)) {
     let filename = url
     if (!isWindows)
       filename = fileURLToPath(url)
