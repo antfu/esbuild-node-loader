@@ -11,6 +11,29 @@ const excludeRegex = /^\w+:/
 
 const HAS_UPDATED_HOOKS = semverGte(process.versions.node, '16.12.0')
 
+function esbuildTransformSync(rawSource, filename, url, format) {
+  const {
+    code: js,
+    warnings,
+    map: jsSourceMap,
+  } = transformSync(rawSource.toString(), {
+    sourcefile: filename,
+    sourcemap: 'both',
+    loader: new URL(url).pathname.match(extensionsRegex)[1],
+    target: `node${process.versions.node}`,
+    format: format === 'module' ? 'esm' : 'cjs',
+  })
+
+  if (warnings && warnings.length > 0) {
+    for (const warning of warnings) {
+      console.warn(warning.location)
+      console.warn(warning.text)
+    }
+  }
+
+  return { js, jsSourceMap }
+}
+
 export function resolve(specifier, context, defaultResolve) {
   const { parentURL = baseURL } = context
   const url = new URL(specifier, parentURL)
@@ -44,25 +67,7 @@ export function load(url, context, defaultLoad) {
     if (!isWindows) filename = fileURLToPath(url)
 
     const rawSource = fs.readFileSync(new URL(url), { encoding: 'utf8' })
-
-    const {
-      code: js,
-      warnings,
-      map: jsSourceMap,
-    } = transformSync(rawSource.toString(), {
-      sourcefile: filename,
-      sourcemap: 'both',
-      loader: new URL(url).pathname.match(extensionsRegex)[1],
-      target: `node${process.versions.node}`,
-      format: format === 'module' ? 'esm' : 'cjs',
-    })
-
-    if (warnings && warnings.length > 0) {
-      for (const warning of warnings) {
-        console.warn(warning.location)
-        console.warn(warning.text)
-      }
-    }
+    const { js } = esbuildTransformSync(rawSource, filename, url, format)
 
     return {
       format: 'module',
@@ -96,24 +101,7 @@ export const transformSource = HAS_UPDATED_HOOKS
         let filename = url
         if (!isWindows) filename = fileURLToPath(url)
 
-        const {
-          code: js,
-          warnings,
-          map: jsSourceMap,
-        } = transformSync(source.toString(), {
-          sourcefile: filename,
-          sourcemap: 'both',
-          loader: new URL(url).pathname.match(extensionsRegex)[1],
-          target: `node${process.versions.node}`,
-          format: format === 'module' ? 'esm' : 'cjs',
-        })
-
-        if (warnings && warnings.length > 0) {
-          for (const warning of warnings) {
-            console.warn(warning.location)
-            console.warn(warning.text)
-          }
-        }
+        const { js } = esbuildTransformSync(source, filename, url, format)
 
         return {
           source: js,
