@@ -9,6 +9,8 @@ const isWindows = process.platform === 'win32'
 const extensionsRegex = /\.(tsx?|json)$/
 const excludeRegex = /^\w+:/
 
+// Node v16.12.0 has breaking changes for the loader hooks
+// See: https://github.com/nodejs/node/pull/37468
 const HAS_UPDATED_HOOKS = semverGte(process.versions.node, '16.12.0')
 
 function esbuildTransformSync(rawSource, filename, url, format) {
