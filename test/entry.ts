@@ -68,7 +68,7 @@ test('import type module', async() => {
     relativize(`${cwd}/loader.mjs`),
     relativize(`${cwd}/test/import-mjs/index.js`),
   ])
-  assert(stdout === 'foo')
+  assert(stdout === 'foo\nnot index')
 })
 
 test('import with query', async() => {
@@ -108,7 +108,7 @@ test('import json', async() => {
 })
 
 test('tsconfig-paths', async() => {
-  const cwd2 = `${cwd}/test/tsconfig-paths`;
+  const cwd2 = `${cwd}/test/tsconfig-paths`
   const { stdout } = await execa('node', [
     '--experimental-loader',
     relativize(`${cwd}/loader.mjs`, cwd2),

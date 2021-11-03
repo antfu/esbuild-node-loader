@@ -1,21 +1,13 @@
 import { URL, pathToFileURL, fileURLToPath } from 'url'
 import fs from 'fs'
 import { transformSync } from 'esbuild'
-import { createMatchPath, loadConfig } from 'tsconfig-paths'
+import typescript from '@rollup/plugin-typescript'
 
 const baseURL = pathToFileURL(`${process.cwd()}/`).href
 const isWindows = process.platform === 'win32'
 
 const extensionsRegex = /\.(m?tsx?|json)$/
-const excludeRegex = /^\w+:/
-const tsExtensions = ['.mts', '.ts', '.cts', '.tsx'] // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html
-const jsExtensions = ['.mjs', '.js', '.cjs', '.jsx']
-const extensions = [...tsExtensions, ...jsExtensions]
-
-const tsconfig = loadConfig()
-
-const matchPath = tsconfig.resultType === 'success' ? createMatchPath(tsconfig.absoluteBaseUrl, tsconfig.paths) : undefined
-
+const pluginTypescript = typescript()
 function esbuildTransformSync(rawSource, filename, url, format) {
   const {
     code: js,
@@ -39,49 +31,19 @@ function esbuildTransformSync(rawSource, filename, url, format) {
   return { js, jsSourceMap }
 }
 
-export const tryPathWithExtensions = (path) => {
-  for (const ext of extensions) {
-    const p = `${path}${ext}`
-    if (fs.existsSync(p))
-      return p
-  }
-  return null
-}
+export async function resolve(specifier, context, defaultResolve) {
+  const {
+    parentURL = baseURL,
+  } = context
 
-export function resolve(specifier, context, defaultResolve) {
-  // baseUrl & paths takes the highest precedence, as TypeScript behaves.
-  if (matchPath) {
-    const nodePath = matchPath(specifier, undefined, undefined, extensions)
+  const result = await pluginTypescript.resolveId(specifier, new URL(parentURL).pathname)
 
-    if (nodePath) {
-      const foundPath = tryPathWithExtensions(nodePath)
-      return {
-        url: pathToFileURL(foundPath).href,
-        format: extensionsRegex.test(foundPath) && 'module',
-      }
+  if (result) {
+    return {
+      url: pathToFileURL(result).href,
+      format: 'module',
     }
   }
-
-  const { parentURL = baseURL } = context
-  const url = new URL(specifier, parentURL)
-  if (extensionsRegex.test(url.pathname))
-    return { url: url.href, format: 'module' }
-
-  // ignore `data:` and `node:` prefix etc.
-  if (!excludeRegex.test(specifier)) {
-    // Try to resolve extension
-    const path = fileURLToPath(url.href)
-    const foundPath = tryPathWithExtensions(path)
-    if (foundPath) {
-      url.pathname = foundPath
-      return {
-        url: url.href,
-        format: extensionsRegex.test(url.pathname) && 'module',
-      }
-    }
-  }
-
-  // Let Node.js handle all other specifiers.
   return defaultResolve(specifier, context, defaultResolve)
 }
 
