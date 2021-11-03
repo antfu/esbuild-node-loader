@@ -36,21 +36,37 @@ function esbuildTransformSync(rawSource, filename, url, format) {
   return { js, jsSourceMap }
 }
 
-function getTsCompatSpecifier(parentPath, specifier) {
-  let s
+function getTsCompatSpecifier(parentURL, specifier) {
+  let tsSpecifier
+  let search
 
-  const url = new URL(`file://${path.join(path.dirname(parentPath), specifier)}`)
-  // Relative import
-  if (specifier.startsWith('./'))
-    s = url.pathname
-  else
-    s = specifier
-
-  s = s.replace(/\.tsx?$/, '')
+  if (specifier.startsWith('./') || specifier.startsWith('../')) {
+    // Relative import
+    const url = new URL(specifier, parentURL)
+    tsSpecifier = url.pathname.replace(/\.tsx?$/, '')
+    search = url.search
+  }
+  else {
+    // Bare import
+    tsSpecifier = specifier
+    search = ''
+  }
 
   return {
-    tsSpecifier: s,
-    search: url.search,
+    tsSpecifier,
+    search,
+  }
+}
+
+function isValidURL(s) {
+  try {
+    return !!new URL(s)
+  }
+  catch (e) {
+    if (e instanceof TypeError)
+      return false
+
+    throw e
   }
 }
 
@@ -59,19 +75,28 @@ export async function resolve(specifier, context, defaultResolve) {
     parentURL,
   } = context
 
-  if (!parentURL) {
-    return {
-      ...await defaultResolve(specifier, context, defaultResolve),
-      format: 'module',
+  let url
+
+  // According to Node's algorithm, we first check if it is a valid URL.
+  // When the module is the entry point, node will provides a file URL to it.
+  if (isValidURL(specifier)) {
+    url = new URL(specifier)
+  }
+  else {
+    // Try to resolve the module according to typescript's algorithm,
+    // and construct a valid url.
+    const parsed = getTsCompatSpecifier(parentURL, specifier)
+    const path = pluginTypescript.resolveId(parsed.tsSpecifier, new URL(parentURL).pathname)
+    if (path) {
+      url = pathToFileURL(path)
+      url.search = parsed.search
     }
   }
 
-  const parentPath = new URL(parentURL).pathname
-  const { tsSpecifier, search } = getTsCompatSpecifier(parentPath, specifier)
-  const result = pluginTypescript.resolveId(tsSpecifier, parentPath)
-  if (result && extensionsRegex.test(result)) {
+  // If the resolved file is typescript
+  if (url && extensionsRegex.test(url.pathname)) {
     return {
-      url: `${pathToFileURL(result).href}${search}`,
+      url: url.href,
       format: 'module',
     }
   }
