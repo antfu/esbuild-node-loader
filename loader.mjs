@@ -1,12 +1,20 @@
 import { URL, pathToFileURL, fileURLToPath } from 'url'
 import fs from 'fs'
 import { transformSync } from 'esbuild'
+import { createMatchPath, loadConfig } from 'tsconfig-paths'
 
 const baseURL = pathToFileURL(`${process.cwd()}/`).href
 const isWindows = process.platform === 'win32'
 
-const extensionsRegex = /\.(tsx?|json)$/
+const extensionsRegex = /\.(m?tsx?|json)$/
 const excludeRegex = /^\w+:/
+const tsExtensions = ['.mts', '.ts', '.cts', '.tsx'] // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html
+const jsExtensions = ['.mjs', '.js', '.cjs', '.jsx']
+const extensions = [...tsExtensions, ...jsExtensions]
+
+const tsconfig = loadConfig()
+
+const matchPath = tsconfig.resultType === 'success' ? createMatchPath(tsconfig.absoluteBaseUrl, tsconfig.paths) : undefined
 
 function esbuildTransformSync(rawSource, filename, url, format) {
   const {
@@ -31,7 +39,29 @@ function esbuildTransformSync(rawSource, filename, url, format) {
   return { js, jsSourceMap }
 }
 
+export const tryPathWithExtensions = (path) => {
+  for (const ext of extensions) {
+    const p = `${path}${ext}`
+    if (fs.existsSync(p))
+      return p
+  }
+  return null
+}
+
 export function resolve(specifier, context, defaultResolve) {
+  // baseUrl & paths takes the highest precedence, as TypeScript behaves.
+  if (matchPath) {
+    const nodePath = matchPath(specifier, undefined, undefined, extensions)
+
+    if (nodePath) {
+      const foundPath = tryPathWithExtensions(nodePath)
+      return {
+        url: pathToFileURL(foundPath).href,
+        format: extensionsRegex.test(foundPath) && 'module',
+      }
+    }
+  }
+
   const { parentURL = baseURL } = context
   const url = new URL(specifier, parentURL)
   if (extensionsRegex.test(url.pathname))
@@ -40,15 +70,14 @@ export function resolve(specifier, context, defaultResolve) {
   // ignore `data:` and `node:` prefix etc.
   if (!excludeRegex.test(specifier)) {
     // Try to resolve extension
-    const pathname = url.pathname
-    for (const ext of ['ts', 'tsx']) {
-      url.pathname = `${pathname}.${ext}`
-      const path = fileURLToPath(url.href)
-      if (fs.existsSync(path))
-        return {
-          url: url.href,
-          format: extensionsRegex.test(url.pathname) && 'module',
-        }
+    const path = fileURLToPath(url.href)
+    const foundPath = tryPathWithExtensions(path)
+    if (foundPath) {
+      url.pathname = foundPath
+      return {
+        url: url.href,
+        format: extensionsRegex.test(url.pathname) && 'module',
+      }
     }
   }
 

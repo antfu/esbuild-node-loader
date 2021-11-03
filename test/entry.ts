@@ -4,8 +4,8 @@ import { test } from 'uvu'
 import execa from 'execa'
 
 const cwd = process.cwd()
-function relativize(path: string) {
-  return `./${relative(cwd, path)}`
+function relativize(path: string, curCwd = cwd) {
+  return `./${relative(curCwd, path)}`
 }
 
 test('register', async() => {
@@ -105,6 +105,18 @@ test('import json', async() => {
     relativize(`${cwd}/test/fixture.json.ts`),
   ])
   assert(stdout === 'esbuild-node-loader')
+})
+
+test('tsconfig-paths', async() => {
+  const cwd2 = `${cwd}/test/tsconfig-paths`;
+  const { stdout } = await execa('node', [
+    '--experimental-loader',
+    relativize(`${cwd}/loader.mjs`, cwd2),
+    relativize(`${cwd}/test/tsconfig-paths/src/utils/fixture.ts`, cwd2),
+  ], {
+    cwd: cwd2,
+  })
+  assert.equal(stdout, 'foo\nfoo')
 })
 
 test.run()
