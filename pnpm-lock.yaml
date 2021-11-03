@@ -9,12 +9,14 @@ specifiers:
   esbuild: ^0.13.3
   eslint: ^7.32.0
   execa: ^5.1.1
+  joycon: ^3.0.1
   typescript: ^4.4.3
   uvu: ^0.5.1
 
 dependencies:
   '@rollup/plugin-typescript': 8.3.0_typescript@4.4.3
   esbuild: 0.13.3
+  joycon: 3.0.1
 
 devDependencies:
   '@antfu/eslint-config': 0.9.0_eslint@7.32.0+typescript@4.4.3
@@ -1952,6 +1954,11 @@ packages:
   /isexe/2.0.0:
     resolution: {integrity: sha1-6PvzdNxVb/iUehDcsFctYz8s+hA=}
     dev: true
+
+  /joycon/3.0.1:
+    resolution: {integrity: sha512-SJcJNBg32dGgxhPtM0wQqxqV0ax9k/9TaUskGDSJkSFSQOEWWvQ3zzWdGQRIUry2j1zA5+ReH13t0Mf3StuVZA==}
+    engines: {node: '>=10'}
+    dev: false
 
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}

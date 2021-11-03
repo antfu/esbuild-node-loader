@@ -66,7 +66,7 @@ test('import type module', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',
     relativize(`${cwd}/loader.mjs`),
-    relativize(`${cwd}/test/import-mjs/index.js`),
+    relativize(`${cwd}/test/import-mjs/index.ts`),
   ])
   assert(stdout === 'foo\nnot index')
 })

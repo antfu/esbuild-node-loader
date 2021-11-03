@@ -1,13 +1,18 @@
 import { URL, pathToFileURL, fileURLToPath } from 'url'
 import fs from 'fs'
+import path from 'path'
 import { transformSync } from 'esbuild'
 import typescript from '@rollup/plugin-typescript'
+import JoyCon from 'joycon'
 
-const baseURL = pathToFileURL(`${process.cwd()}/`).href
 const isWindows = process.platform === 'win32'
 
 const extensionsRegex = /\.(m?tsx?|json)$/
-const pluginTypescript = typescript()
+const tsconfigPath = new JoyCon({ parseJSON: () => {} }).loadSync(['tsconfig.json']).path
+const pluginTypescript = typescript({
+  tsconfig: tsconfigPath,
+})
+
 function esbuildTransformSync(rawSource, filename, url, format) {
   const {
     code: js,
@@ -31,19 +36,46 @@ function esbuildTransformSync(rawSource, filename, url, format) {
   return { js, jsSourceMap }
 }
 
+function getTsCompatSpecifier(parentPath, specifier) {
+  let s
+
+  const url = new URL(`file://${path.join(path.dirname(parentPath), specifier)}`)
+  // Relative import
+  if (specifier.startsWith('./'))
+    s = url.pathname
+  else
+    s = specifier
+
+  s = s.replace(/\.tsx?$/, '')
+
+  return {
+    tsSpecifier: s,
+    search: url.search,
+  }
+}
+
 export async function resolve(specifier, context, defaultResolve) {
   const {
-    parentURL = baseURL,
+    parentURL,
   } = context
 
-  const result = await pluginTypescript.resolveId(specifier, new URL(parentURL).pathname)
-
-  if (result) {
+  if (!parentURL) {
     return {
-      url: pathToFileURL(result).href,
+      ...await defaultResolve(specifier, context, defaultResolve),
       format: 'module',
     }
   }
+
+  const parentPath = new URL(parentURL).pathname
+  const { tsSpecifier, search } = getTsCompatSpecifier(parentPath, specifier)
+  const result = pluginTypescript.resolveId(tsSpecifier, parentPath)
+  if (result && extensionsRegex.test(result)) {
+    return {
+      url: `${pathToFileURL(result).href}${search}`,
+      format: 'module',
+    }
+  }
+
   return defaultResolve(specifier, context, defaultResolve)
 }
 
