@@ -43,7 +43,7 @@ function getTsCompatSpecifier(parentURL, specifier) {
   if (specifier.startsWith('./') || specifier.startsWith('../')) {
     // Relative import
     const url = new URL(specifier, parentURL)
-    tsSpecifier = url.pathname.replace(/\.tsx?$/, '')
+    tsSpecifier = fileURLToPath(url).replace(/\.tsx?$/, '')
     search = url.search
   }
   else {
@@ -86,19 +86,23 @@ export async function resolve(specifier, context, defaultResolve) {
     // Try to resolve the module according to typescript's algorithm,
     // and construct a valid url.
     const parsed = getTsCompatSpecifier(parentURL, specifier)
-    const path = pluginTypescript.resolveId(parsed.tsSpecifier, new URL(parentURL).pathname)
+    const path = pluginTypescript.resolveId(parsed.tsSpecifier, fileURLToPath(parentURL))
     if (path) {
       url = pathToFileURL(path)
       url.search = parsed.search
     }
   }
 
-  // If the resolved file is typescript
-  if (url && extensionsRegex.test(url.pathname)) {
-    return {
-      url: url.href,
-      format: 'module',
+  if (url) {
+    // If the resolved file is typescript
+    if (extensionsRegex.test(url.pathname)) {
+      return {
+        url: url.href,
+        format: 'module',
+      }
     }
+    // Else, for other types, use default resolve with the valid path
+    return defaultResolve(url.href, context, defaultResolve)
   }
 
   return defaultResolve(specifier, context, defaultResolve)
