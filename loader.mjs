@@ -1,20 +1,17 @@
 import { URL, pathToFileURL, fileURLToPath } from 'url'
 import fs from 'fs'
+import path from 'path'
 import { transformSync } from 'esbuild'
-import { createMatchPath, loadConfig } from 'tsconfig-paths'
+import typescript from '@rollup/plugin-typescript'
+import JoyCon from 'joycon'
 
-const baseURL = pathToFileURL(`${process.cwd()}/`).href
 const isWindows = process.platform === 'win32'
 
 const extensionsRegex = /\.(m?tsx?|json)$/
-const excludeRegex = /^\w+:/
-const tsExtensions = ['.mts', '.ts', '.cts', '.tsx'] // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html
-const jsExtensions = ['.mjs', '.js', '.cjs', '.jsx']
-const extensions = [...tsExtensions, ...jsExtensions]
-
-const tsconfig = loadConfig()
-
-const matchPath = tsconfig.resultType === 'success' ? createMatchPath(tsconfig.absoluteBaseUrl, tsconfig.paths) : undefined
+const tsconfigPath = new JoyCon({ parseJSON: () => {} }).loadSync(['tsconfig.json']).path
+const pluginTypescript = typescript({
+  tsconfig: tsconfigPath,
+})
 
 function esbuildTransformSync(rawSource, filename, url, format) {
   const {
@@ -39,49 +36,75 @@ function esbuildTransformSync(rawSource, filename, url, format) {
   return { js, jsSourceMap }
 }
 
-export const tryPathWithExtensions = (path) => {
-  for (const ext of extensions) {
-    const p = `${path}${ext}`
-    if (fs.existsSync(p))
-      return p
+function getTsCompatSpecifier(parentURL, specifier) {
+  let tsSpecifier
+  let search
+
+  if (specifier.startsWith('./') || specifier.startsWith('../')) {
+    // Relative import
+    const url = new URL(specifier, parentURL)
+    tsSpecifier = fileURLToPath(url).replace(/\.tsx?$/, '')
+    search = url.search
   }
-  return null
+  else {
+    // Bare import
+    tsSpecifier = specifier
+    search = ''
+  }
+
+  return {
+    tsSpecifier,
+    search,
+  }
 }
 
-export function resolve(specifier, context, defaultResolve) {
-  // baseUrl & paths takes the highest precedence, as TypeScript behaves.
-  if (matchPath) {
-    const nodePath = matchPath(specifier, undefined, undefined, extensions)
+function isValidURL(s) {
+  try {
+    return !!new URL(s)
+  }
+  catch (e) {
+    if (e instanceof TypeError)
+      return false
 
-    if (nodePath) {
-      const foundPath = tryPathWithExtensions(nodePath)
-      return {
-        url: pathToFileURL(foundPath).href,
-        format: extensionsRegex.test(foundPath) && 'module',
-      }
+    throw e
+  }
+}
+
+export async function resolve(specifier, context, defaultResolve) {
+  const {
+    parentURL,
+  } = context
+
+  let url
+
+  // According to Node's algorithm, we first check if it is a valid URL.
+  // When the module is the entry point, node will provides a file URL to it.
+  if (isValidURL(specifier)) {
+    url = new URL(specifier)
+  }
+  else {
+    // Try to resolve the module according to typescript's algorithm,
+    // and construct a valid url.
+    const parsed = getTsCompatSpecifier(parentURL, specifier)
+    const path = pluginTypescript.resolveId(parsed.tsSpecifier, fileURLToPath(parentURL))
+    if (path) {
+      url = pathToFileURL(path)
+      url.search = parsed.search
     }
   }
 
-  const { parentURL = baseURL } = context
-  const url = new URL(specifier, parentURL)
-  if (extensionsRegex.test(url.pathname))
-    return { url: url.href, format: 'module' }
-
-  // ignore `data:` and `node:` prefix etc.
-  if (!excludeRegex.test(specifier)) {
-    // Try to resolve extension
-    const path = fileURLToPath(url.href)
-    const foundPath = tryPathWithExtensions(path)
-    if (foundPath) {
-      url.pathname = foundPath
+  if (url) {
+    // If the resolved file is typescript
+    if (extensionsRegex.test(url.pathname)) {
       return {
         url: url.href,
-        format: extensionsRegex.test(url.pathname) && 'module',
+        format: 'module',
       }
     }
+    // Else, for other types, use default resolve with the valid path
+    return defaultResolve(url.href, context, defaultResolve)
   }
 
-  // Let Node.js handle all other specifiers.
   return defaultResolve(specifier, context, defaultResolve)
 }
 
