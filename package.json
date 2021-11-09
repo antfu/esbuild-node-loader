@@ -37,6 +37,9 @@
     "esbuild": "^0.13.12",
     "joycon": "^3.0.1"
   },
+  "peerDependencies": {
+    "typescript": "^4.0"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "^0.10.0",
     "@antfu/ni": "^0.10.1",
