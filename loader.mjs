@@ -7,7 +7,7 @@ import JoyCon from 'joycon'
 
 const isWindows = process.platform === 'win32'
 
-const extensionsRegex = /\.(m?tsx?|json)$/
+const extensionsRegex = /\.m?(tsx?|json)$/
 const tsconfigPath = new JoyCon({ parseJSON: () => {} }).loadSync(['tsconfig.json']).path
 const pluginTypescript = typescript({
   tsconfig: tsconfigPath,
