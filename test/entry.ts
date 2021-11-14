@@ -53,6 +53,15 @@ test('register cjs', async() => {
   assert(stdout === 'fs imported')
 })
 
+test('register mts', async() => {
+  const { stdout } = await execa('node', [
+    '--experimental-loader',
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.mts.mts`),
+  ])
+  assert(stdout === 'hello from mts')
+})
+
 test('package type module', async() => {
   const { stdout } = await execa('node', [
     '--experimental-loader',

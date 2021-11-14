@@ -1,13 +1,12 @@
 import { URL, pathToFileURL, fileURLToPath } from 'url'
 import fs from 'fs'
-import path from 'path'
 import { transformSync } from 'esbuild'
 import typescript from '@rollup/plugin-typescript'
 import JoyCon from 'joycon'
 
 const isWindows = process.platform === 'win32'
 
-const extensionsRegex = /\.(m?tsx?|json)$/
+const extensionsRegex = /\.m?(tsx?|json)$/
 const tsconfigPath = new JoyCon({ parseJSON: () => {} }).loadSync(['tsconfig.json']).path
 const pluginTypescript = typescript({
   tsconfig: tsconfigPath,
