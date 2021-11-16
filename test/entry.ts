@@ -77,7 +77,7 @@ test('import type module', async() => {
     relativize(`${cwd}/loader.mjs`),
     relativize(`${cwd}/test/import-mjs/index.ts`),
   ])
-  assert(stdout === 'foo\nnot index\nexport')
+  assert(stdout === 'foo\nnot index\nexport\nhello from d.ts')
 })
 
 test('import with query', async() => {
