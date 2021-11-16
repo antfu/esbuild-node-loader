@@ -1,16 +1,37 @@
 import { URL, pathToFileURL, fileURLToPath } from 'url'
 import fs from 'fs'
-import { transformSync } from 'esbuild'
-import typescript from '@rollup/plugin-typescript'
-import JoyCon from 'joycon'
+import { dirname } from 'path'
+import { transformSync, build } from 'esbuild'
 
 const isWindows = process.platform === 'win32'
 
 const extensionsRegex = /\.m?(tsx?|json)$/
-const tsconfigPath = new JoyCon({ parseJSON: () => {} }).loadSync(['tsconfig.json']).path
-const pluginTypescript = typescript({
-  tsconfig: tsconfigPath,
-})
+
+async function esbuildResolve(id, dir) {
+  let result
+
+  await build({
+    stdin: {
+      contents: `import ${JSON.stringify(id)}`,
+      resolveDir: dir,
+    },
+    write: false,
+    bundle: true,
+    treeShaking: false,
+    ignoreAnnotations: true,
+    platform: 'node',
+    plugins: [{
+      name: 'resolve',
+      setup({ onLoad }) {
+        onLoad({ filter: /.*/ }, (args) => {
+          result = args.path
+          return { contents: '' }
+        })
+      },
+    }],
+  })
+  return result
+}
 
 function esbuildTransformSync(rawSource, filename, url, format) {
   const {
@@ -84,8 +105,9 @@ export async function resolve(specifier, context, defaultResolve) {
   else {
     // Try to resolve the module according to typescript's algorithm,
     // and construct a valid url.
+
     const parsed = getTsCompatSpecifier(parentURL, specifier)
-    const path = pluginTypescript.resolveId(parsed.tsSpecifier, fileURLToPath(parentURL))
+    const path = await esbuildResolve(parsed.tsSpecifier, dirname(fileURLToPath(parentURL)))
     if (path) {
       url = pathToFileURL(path)
       url.search = parsed.search
