@@ -33,7 +33,7 @@
     "test": "node --experimental-loader ./loader.mjs test/entry.ts"
   },
   "dependencies": {
-    "esbuild": "^0.13.12"
+    "esbuild": ">=0.13.12"
   },
   "peerDependencies": {
     "typescript": "^4.0"

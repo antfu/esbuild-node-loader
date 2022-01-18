@@ -5,7 +5,7 @@ specifiers:
   '@antfu/ni': ^0.10.1
   '@types/node': ^16.11.7
   bumpp: ^7.1.1
-  esbuild: ^0.13.12
+  esbuild: '>=0.13.12'
   eslint: ^8.2.0
   execa: ^5.1.1
   uvu: ^0.5.2
