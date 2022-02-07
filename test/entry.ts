@@ -1,7 +1,7 @@
 import assert from 'assert'
 import { relative } from 'path'
 import { test } from 'uvu'
-import execa from 'execa'
+import { execa } from 'execa'
 
 const cwd = process.cwd()
 function relativize(path: string, curCwd = cwd) {

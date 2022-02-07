@@ -1,4 +1,7 @@
 {
   "extends": ["@antfu"],
-  "rules": {}
+  "rules": {
+    "no-console": "off",
+    "import/no-duplicates": "off"
+  }
 }

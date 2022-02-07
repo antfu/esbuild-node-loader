@@ -1,4 +1,3 @@
-const foo = {bar:"baz"}
-if(foo?.bar) {
-    console.log('hello from ts')
-}
+const foo = { bar: 'baz' }
+if (foo?.bar)
+  console.log('hello from ts')
