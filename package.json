@@ -35,9 +35,6 @@
   "dependencies": {
     "esbuild": ">=0.13.12"
   },
-  "peerDependencies": {
-    "typescript": "^4.0"
-  },
   "devDependencies": {
     "@antfu/eslint-config": "^0.10.0",
     "@antfu/ni": "^0.10.1",
