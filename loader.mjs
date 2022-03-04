@@ -2,9 +2,11 @@ import { URL, pathToFileURL, fileURLToPath } from 'url'
 import fs from 'fs'
 import { dirname } from 'path'
 import { transformSync, build } from 'esbuild'
+import fetch from 'node-fetch'
 
 const isWindows = process.platform === 'win32'
 
+const httpRegex = /^https?:\/\//
 const extensionsRegex = /\.m?(tsx?|json)$/
 
 async function esbuildResolve(id, dir) {
@@ -95,6 +97,13 @@ export async function resolve(specifier, context, defaultResolve) {
     parentURL,
   } = context
 
+  if (httpRegex.test(specifier) || httpRegex.test(parentURL)) {
+    return {
+      url: new URL(specifier, parentURL).href,
+      format: 'module',
+    }
+  }
+
   let url
 
   // According to Node's algorithm, we first check if it is a valid URL.
@@ -131,7 +140,14 @@ export async function resolve(specifier, context, defaultResolve) {
 
 // New hook starting from Node v16.12.0
 // See: https://github.com/nodejs/node/pull/37468
-export function load(url, context, defaultLoad) {
+export async function load(url, context, defaultLoad) {
+  if (httpRegex.test(url)) {
+    return {
+      format: 'module',
+      source: await (await fetch(url)).text(),
+    }
+  }
+
   if (extensionsRegex.test(new URL(url).pathname)) {
     const { format } = context
 
@@ -152,6 +168,12 @@ export function load(url, context, defaultLoad) {
 }
 
 export function getFormat(url, context, defaultGetFormat) {
+  if (httpRegex.test(url)) {
+    return {
+      format: 'module',
+    }
+  }
+
   if (extensionsRegex.test(new URL(url).pathname)) {
     return {
       format: 'module',
@@ -162,8 +184,15 @@ export function getFormat(url, context, defaultGetFormat) {
   return defaultGetFormat(url, context, defaultGetFormat)
 }
 
-export function transformSource(source, context, defaultTransformSource) {
+export async function transformSource(source, context, defaultTransformSource) {
   const { url, format } = context
+
+  if (httpRegex.test(url)) {
+    return {
+      format: 'module',
+      source: await (await fetch(url)).text(),
+    }
+  }
 
   if (extensionsRegex.test(new URL(url).pathname)) {
     let filename = url
@@ -178,4 +207,14 @@ export function transformSource(source, context, defaultTransformSource) {
 
   // Let Node.js handle all other sources.
   return defaultTransformSource(source, context, defaultTransformSource)
+}
+
+export async function getSource(url, context, defaultGetSource) {
+  if (httpRegex.test(url)) {
+    return {
+      source: await (await fetch(url)).text(),
+    }
+  }
+
+  return defaultGetSource(url, context, defaultGetSource)
 }

@@ -116,6 +116,15 @@ test('import json', async() => {
   assert(stdout === 'esbuild-node-loader')
 })
 
+test('http import', async() => {
+  const { stdout } = await execa('node', [
+    '--experimental-loader',
+    relativize(`${cwd}/loader.mjs`),
+    relativize(`${cwd}/test/fixture.http.ts`),
+  ])
+  assert(stdout === 'fooBar')
+})
+
 test('tsconfig-paths', async() => {
   const cwd2 = `${cwd}/test/tsconfig-paths`
   const { stdout } = await execa('node', [
