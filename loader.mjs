@@ -1,8 +1,7 @@
-import { URL, pathToFileURL, fileURLToPath } from 'url'
+import { URL, fileURLToPath, pathToFileURL } from 'url'
 import fs from 'fs'
 import { dirname } from 'path'
-import { transformSync, build } from 'esbuild'
-import fetch from 'node-fetch'
+import { build, transformSync } from 'esbuild'
 
 const isWindows = process.platform === 'win32'
 
@@ -144,7 +143,7 @@ export async function load(url, context, defaultLoad) {
   if (httpRegex.test(url)) {
     return {
       format: 'module',
-      source: await (await fetch(url)).text(),
+      source: await fetchNetworkModule(url),
     }
   }
 
@@ -190,7 +189,7 @@ export async function transformSource(source, context, defaultTransformSource) {
   if (httpRegex.test(url)) {
     return {
       format: 'module',
-      source: await (await fetch(url)).text(),
+      source: await fetchNetworkModule(url),
     }
   }
 
@@ -212,9 +211,25 @@ export async function transformSource(source, context, defaultTransformSource) {
 export async function getSource(url, context, defaultGetSource) {
   if (httpRegex.test(url)) {
     return {
-      source: await (await fetch(url)).text(),
+      source: await fetchNetworkModule(url),
     }
   }
 
   return defaultGetSource(url, context, defaultGetSource)
+}
+
+export const networkModuleCache = new Map()
+
+function fetchNetworkModule(url) {
+  if (!networkModuleCache.has(url)) {
+    const promise = (async() => {
+      const _fetch = (typeof fetch != 'undefined')
+        ? fetch
+        : (await import('node-fetch')).default
+
+      return await _fetch(url).then(r => r.text())
+    })()
+    networkModuleCache.set(url, promise)
+  }
+  return networkModuleCache.get(url)
 }
