@@ -33,7 +33,8 @@
     "test": "node --experimental-loader ./loader.mjs test/entry.ts"
   },
   "dependencies": {
-    "esbuild": ">=0.13.12"
+    "esbuild": ">=0.13.12",
+    "node-fetch": "^3.2.1"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.16.1",
