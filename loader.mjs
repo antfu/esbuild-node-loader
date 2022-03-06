@@ -2,6 +2,7 @@ import { URL, fileURLToPath, pathToFileURL } from 'url'
 import fs from 'fs'
 import { dirname } from 'path'
 import { build, transformSync } from 'esbuild'
+import semver from 'semver'
 
 const isWindows = process.platform === 'win32'
 
@@ -91,7 +92,7 @@ function isValidURL(s) {
   }
 }
 
-export async function resolve(specifier, context, defaultResolve) {
+async function resolveBase(specifier, context, defaultResolve) {
   const {
     parentURL,
   } = context
@@ -137,9 +138,7 @@ export async function resolve(specifier, context, defaultResolve) {
   return defaultResolve(specifier, context, defaultResolve)
 }
 
-// New hook starting from Node v16.12.0
-// See: https://github.com/nodejs/node/pull/37468
-export async function load(url, context, defaultLoad) {
+async function loadBase(url, context, defaultLoad) {
   if (httpRegex.test(url)) {
     return {
       format: 'module',
@@ -166,7 +165,7 @@ export async function load(url, context, defaultLoad) {
   return defaultLoad(url, context, defaultLoad)
 }
 
-export function getFormat(url, context, defaultGetFormat) {
+function getFormatBase(url, context, defaultGetFormat) {
   if (httpRegex.test(url)) {
     return {
       format: 'module',
@@ -183,7 +182,7 @@ export function getFormat(url, context, defaultGetFormat) {
   return defaultGetFormat(url, context, defaultGetFormat)
 }
 
-export async function transformSource(source, context, defaultTransformSource) {
+async function transformSourceBase(source, context, defaultTransformSource) {
   const { url, format } = context
 
   if (httpRegex.test(url)) {
@@ -208,7 +207,7 @@ export async function transformSource(source, context, defaultTransformSource) {
   return defaultTransformSource(source, context, defaultTransformSource)
 }
 
-export async function getSource(url, context, defaultGetSource) {
+async function getSourceBase(url, context, defaultGetSource) {
   if (httpRegex.test(url)) {
     return {
       source: await fetchNetworkModule(url),
@@ -218,11 +217,11 @@ export async function getSource(url, context, defaultGetSource) {
   return defaultGetSource(url, context, defaultGetSource)
 }
 
-export const networkModuleCache = new Map()
+const networkModuleCache = new Map()
 
 function fetchNetworkModule(url) {
   if (!networkModuleCache.has(url)) {
-    const promise = (async() => {
+    const promise = (async () => {
       const _fetch = (typeof fetch != 'undefined')
         ? fetch
         : (await import('node-fetch')).default
@@ -233,3 +232,22 @@ function fetchNetworkModule(url) {
   }
   return networkModuleCache.get(url)
 }
+
+// New hook starting from Node v16.12.0
+// See: https://github.com/nodejs/node/pull/37468
+const _resolve = resolveBase
+let _load, _getFormat, _transformSource, _getSource
+if (semver.satisfies(process.versions.node, '>=16.12.0')) {
+  _load = loadBase
+}
+else {
+  _getFormat = getFormatBase
+  _transformSource = transformSourceBase
+  _getSource = getSourceBase
+}
+export const resolve = _resolve
+export const load = _load
+export const getFormat = _getFormat
+export const transformSource = _transformSource
+export const getSource = _getSource
+export { networkModuleCache }
