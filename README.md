@@ -1,3 +1,7 @@
+Deprecated. This package has been moved to https://github.com/esbuild-kit/esm-loader
+
+----
+
 # esbuild-node-loader
 
 [![NPM version](https://img.shields.io/npm/v/esbuild-node-loader?color=a1b858&label=)](https://www.npmjs.com/package/esbuild-node-loader)
