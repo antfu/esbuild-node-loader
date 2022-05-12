@@ -1,4 +1,4 @@
-Deprecated. This package has been moved to https://github.com/esbuild-kit/esm-loader
+# Deprecated. This package has been moved to https://github.com/esbuild-kit/esm-loader
 
 ----
 
